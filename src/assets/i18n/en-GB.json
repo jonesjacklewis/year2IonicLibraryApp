@@ -6,5 +6,8 @@
   "WELSH": "Welsh",
   "ENGLISH": "English",
   "LANGUAGE": "Language",
-  "TEXT_TO_SPEECH": "Text to Speech"
+  "TEXT_TO_SPEECH": "Text to Speech",
+  "TTS_NOT_SUPPORTED": "Text to Speech is not supported in English (GB)",
+  "TTS_ENABLED": "Text to Speech Enabled",
+  "TTS_DISABLED": "Text to Speech Disabled"
 }

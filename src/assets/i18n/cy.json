@@ -6,5 +6,8 @@
   "WELSH": "Cymraeg",
   "ENGLISH": "Saesneg",
   "LANGUAGE": "Iaith",
-  "TEXT_TO_SPEECH": "Testun i Araith"
+  "TEXT_TO_SPEECH": "Testun i Araith",
+  "TTS_NOT_SUPPORTED": "Nid yw Testun i Leferydd yn cael ei gefnogi yn Gymraeg.",
+  "TTS_ENABLED": "Testun i Leferydd Wedi'i Alluogi",
+  "TTS_DISABLED": "Testun i Leferydd Wedi'i Analluogi"
 }

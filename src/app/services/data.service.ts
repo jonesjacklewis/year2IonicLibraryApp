@@ -56,6 +56,7 @@ export class DataService {
       const languageExists = await this.languageConfigExistsWeb();
       if (!languageExists) {
         await this.setConfigWeb('language', 'string', 'en-GB');
+        await this.setConfigWeb('tts', 'boolean', 'false');
       }
     } else {
       await this.setUpSQLite();
@@ -63,6 +64,7 @@ export class DataService {
       const languageExists = await this.languageConfigExistsSqlite();
       if (!languageExists) {
         await this.setConfigSqlite('language', 'string', 'en-GB');
+        await this.setConfigSqlite('tts', 'boolean', 'false');
       }
     }
   }
@@ -158,7 +160,7 @@ export class DataService {
       case 'float':
         return parseFloat(value);
       case 'boolean':
-        return value === 'true';
+        return value.toLocaleLowerCase().includes('true');
       default:
         return value;
     }

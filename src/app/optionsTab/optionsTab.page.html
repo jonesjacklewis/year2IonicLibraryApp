@@ -29,8 +29,13 @@
       <ion-label>
         {{ "TEXT_TO_SPEECH" | translate }}
       </ion-label>
-      <ion-toggle [(ngModel)]="textToSpeech" ></ion-toggle>
+      <ion-toggle
+      [(ngModel)]="textToSpeech"
+      (ionChange)="toggleTts()"
+      ></ion-toggle>
     </ion-item>
+
+   
 
   </ion-list>
 
