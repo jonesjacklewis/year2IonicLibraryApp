@@ -24,6 +24,14 @@
         <ion-select-option *ngFor="let language of allowedLanguages" [value]="language.code">{{language.name | translate}}</ion-select-option>
       </ion-select>
     </ion-item>
+
+    <ion-item>
+      <ion-label>
+        {{ "TEXT_TO_SPEECH" | translate }}
+      </ion-label>
+      <ion-toggle [(ngModel)]="textToSpeech" ></ion-toggle>
+    </ion-item>
+
   </ion-list>
 
 </ion-content>

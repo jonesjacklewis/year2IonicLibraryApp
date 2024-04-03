@@ -1,0 +1,280 @@
+import { Injectable } from '@angular/core';
+import { Platform } from '@ionic/angular';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DataService {
+
+
+  constructor(
+    private platform: Platform
+  ) { 
+    if(this.getPlatform() == 'web'){
+      this.setUpIndexedDB();
+
+      if(!this.languageConfigExists()){
+        this.setConfig('language', 'string', 'en-GB');
+      }
+    }
+  }
+
+  public async setConfig(name: string, dataType: string, value: any): Promise<void> {
+    const stringValue = JSON.stringify(value);
+
+    if(this.getPlatform() == 'web'){
+      this.setConfigWeb(name, dataType, stringValue);
+    }
+  }
+
+  public async updateConfig(name: string, dataType: string, value: any): Promise<void> {
+    const stringValue = JSON.stringify(value);
+
+    if(this.getPlatform() == 'web'){
+      this.updateConfigWeb(name, dataType, stringValue);
+    }
+  }
+
+  public async getConfig(name: string): Promise<any> {
+    if(this.getPlatform() == 'web'){
+      return this.getConfigWeb(name);
+    }
+  }
+
+  public async getConfigWeb(name: string): Promise<any> {
+    const dbName = "bookDb";
+
+    const request = indexedDB.open(dbName, 1);
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = (event) => {
+        if(!event.target){
+          reject();
+        }
+
+        const target = event.target as IDBRequest;
+
+        const db = target.result;
+
+        const transaction = db.transaction(["Config"], "readonly");
+
+        const objectStore = transaction.objectStore("Config");
+
+        const request = objectStore.get(name);
+
+        request.onsuccess = (event: any) => {
+          if(!event.target){
+            reject();
+          }
+
+          const target = event.target as IDBRequest;
+
+          const result = target.result;
+
+          if(result){
+            const dataType: string = result.Type;
+            const untypedValue: string = result.Value;
+
+            if(dataType == 'string'){
+              // remove the quotes from the string
+              resolve(untypedValue.substring(1, untypedValue.length - 1));
+            }
+
+            if(dataType == 'integer'){
+              resolve(parseInt(untypedValue));
+            }
+
+            if(dataType == 'float'){
+              resolve(parseFloat(untypedValue));
+            }
+
+            resolve(result.Value);
+          }
+
+          reject();
+        };
+
+        request.onerror = (event: any) => {
+          console.error("Error getting data: ", event);
+          reject();
+        };
+      };
+    });
+
+
+  }
+
+  private languageConfigExists(): boolean {
+    if(this.getPlatform() == 'web'){
+      const exists = this.languageConfigExistsWeb();
+      
+      if(exists){
+        return true;
+      }
+      return false;
+    }
+
+    return false;
+  }
+
+  private languageConfigExistsWeb(): any {
+    // Check if the language config exists in the IndexedDB
+    const dbName = "bookDb";
+
+    const request = indexedDB.open(dbName, 1);
+
+    request.onsuccess = (event) => {
+      if(!event.target){
+        return false;
+      }
+
+      const target = event.target as IDBRequest;
+
+      const db = target.result;
+
+      const transaction = db.transaction(["Config"], "readonly");
+
+      const objectStore = transaction.objectStore("Config");
+
+      const request = objectStore.get("language");
+
+      request.onsuccess = (event: any) => {
+        if(!event.target){
+          return false;
+        }
+
+        const target = event.target as IDBRequest;
+
+        const result = target.result;
+
+        if(result){
+          return true;
+        }
+
+        return false;
+      };
+
+      request.onerror = (event: any) => {
+        console.error("Error getting data: ", event);
+        return false;
+      };
+
+      return false;
+    };
+  }
+
+  private async updateConfigWeb(name: string, dataType: string, value: string): Promise<void> {
+    const dbName = "bookDb";
+
+    const request = indexedDB.open(dbName, 1);
+
+    request.onsuccess = (event) => {
+      if(!event.target){
+        return;
+      }
+
+      const target = event.target as IDBRequest;
+
+      const db = target.result;
+
+      const transaction = db.transaction(["Config"], "readwrite");
+
+      const objectStore = transaction.objectStore("Config");
+
+      const request = objectStore.put({ Name: name, Type: dataType, Value: value });
+
+      request.onsuccess = () => {
+        console.log("Data updated");
+      };
+
+      request.onerror = (event: any) => {
+        console.error("Error updating data: ", event);
+      };
+    };
+  }
+
+  private async setConfigWeb(name: string, dataType: string, value: string): Promise<void> {
+    const dbName = "bookDb";
+
+    const request = indexedDB.open(dbName, 1);
+
+    request.onsuccess = (event) => {
+      if(!event.target){
+        return;
+      }
+
+      const target = event.target as IDBRequest;
+
+      const db = target.result;
+
+      const transaction = db.transaction(["Config"], "readwrite");
+
+      const objectStore = transaction.objectStore("Config");
+
+      const request = objectStore.add({ Name: name, Type: dataType, Value: value });
+
+      request.onsuccess = () => {
+        console.log("Data added");
+      };
+
+      request.onerror = (event: any) => {
+        console.error("Error adding data: ", event);
+      };
+    };
+  }
+
+  private setUpIndexedDB(): void {
+    const dbName = "bookDb";
+
+    const request = indexedDB.open(dbName, 1);
+
+    request.onerror = (event) => {
+      // Handle errors when opening the database
+      console.error("Database error: ", event);
+      alert(JSON.stringify(event));
+    };
+
+    request.onupgradeneeded = (event) => {
+      // This event is only implemented in recent browsers
+
+      if(!event.target){
+        return;
+      }
+
+      const target = event.target as IDBRequest;
+
+      const db = target.result;
+    
+      // Create an object store called "Config" with "Name" as the key path
+      // The keyPath option sets "Name" as the unique identifier for each record
+      const objectStore = db.createObjectStore("Config", { keyPath: "Name" });
+    
+      // (Optional) Create indexes for "Type" and "Value" if you need to query those fields
+      // The second parameter is the name of the index and the third are the options, unique: false meaning these fields do not have to be unique
+      objectStore.createIndex("Type", "Type", { unique: false });
+      objectStore.createIndex("Value", "Value", { unique: false });
+    
+      console.log("Object store and indexes created");
+    };
+    
+    request.onsuccess = (event) => {
+      // Handle successful database opening here
+      // The database is opened successfully, now you can add, read, delete, etc.
+      console.log("Database initialized");
+    };
+
+  }
+  
+
+  private getPlatform(): string {
+    if(this.platform.is('ios')){
+      return 'ios';
+    }
+
+    if(this.platform.is('android')){
+      return 'android';
+    }
+
+    return 'web';
+  }
+}

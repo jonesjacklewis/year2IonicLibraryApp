@@ -4,6 +4,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Language } from '../interfaces/language';
+import { DataService } from '../services/data.service';
 
 @Component({
   selector: 'app-optionsTab',
@@ -14,16 +15,17 @@ import { Language } from '../interfaces/language';
 })
 export class OptionsTabPage {
 
-  public selectedLanguage: string = 'en';
+  public selectedLanguage: string = 'en-GB';
+  public textToSpeech: boolean = false;
 
   public allowedLanguages: Language[] = [];
 
-  constructor(public translateService: TranslateService) { 
+  constructor(public translateService: TranslateService, public dataService: DataService) { 
     const languages: string[] = translateService.getLangs();
 
     languages.forEach((language: string) => {
-      if(language == 'en'){
-        this.allowedLanguages.push({ code: 'en', name: 'ENGLISH' });
+      if(language == 'en-GB'){
+        this.allowedLanguages.push({ code: 'en-GB', name: 'ENGLISH' });
         return;
       }
 
@@ -32,11 +34,16 @@ export class OptionsTabPage {
         return;
       }
     });
+
+    if(this.translateService.currentLang){
+      this.selectedLanguage = this.translateService.currentLang;
+    }
   }
 
-  public changeLanguage() {
+  public async changeLanguage() {
     if(this.translateService.getLangs().includes(this.selectedLanguage)){
       this.translateService.use(this.selectedLanguage);
+      await this.dataService.updateConfig('language', 'string', this.selectedLanguage);
     }
   }
 
