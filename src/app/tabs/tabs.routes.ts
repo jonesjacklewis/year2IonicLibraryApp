@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { TabsPage } from './tabs.page';
+import { map } from 'rxjs';
 
 export const routes: Routes = [
   {
@@ -7,30 +8,35 @@ export const routes: Routes = [
     component: TabsPage,
     children: [
       {
-        path: 'tab1',
+        path: 'viewBooks',
         loadComponent: () =>
-          import('../tab1/tab1.page').then((m) => m.Tab1Page),
+          import('../viewBooksTab/viewBooksTab.page').then((m) => m.ViewBooksTabPage),
       },
       {
-        path: 'tab2',
+        path: 'addBooks',
         loadComponent: () =>
-          import('../tab2/tab2.page').then((m) => m.Tab2Page),
+          import('../addBooksTab/addBooksTab.page').then((m) => m.AddBooksTabPage),
       },
       {
-        path: 'tab3',
+        path: 'mapMode',
         loadComponent: () =>
-          import('../tab3/tab3.page').then((m) => m.Tab3Page),
+          import('../mapModeTab/mapModeTab.page').then((m) => m.MapModeTabPage),
+      },
+      {
+        path: 'options',
+        loadComponent: () =>
+          import('../optionsTab/optionsTab.page').then((m) => m.OptionsTabPage),
       },
       {
         path: '',
-        redirectTo: '/tabs/tab1',
+        redirectTo: '/tabs/viewBooks',
         pathMatch: 'full',
       },
     ],
   },
   {
     path: '',
-    redirectTo: '/tabs/tab1',
+    redirectTo: '/tabs/viewBooks',
     pathMatch: 'full',
   },
 ];
