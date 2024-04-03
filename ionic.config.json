@@ -1,0 +1,7 @@
+{
+  "name": "bookManagementSystem",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
