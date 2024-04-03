@@ -56,19 +56,28 @@ export class SpeechService {
   }
 
   public async speak(text: string) {
-    if(this.ttsEnabled){
-      const speak = async () => {
-        await TextToSpeech.speak({
-          text: text,
-          lang: this.translateService.currentLang,
-          rate: 1.0,
-          pitch: 1.0,
-          volume: 1.0,
-          category: 'ambient',
-        });
-      };
-
-      await speak();
+    try{
+      if(this.ttsEnabled){
+        const speak = async () => {
+          TextToSpeech.speak({
+            text: text,
+            lang: this.translateService.currentLang,
+            rate: 1.0,
+            pitch: 1.0,
+            volume: 1.0,
+            category: 'playback',
+          }).then(() => {
+          }).catch((e) => {
+            alert(JSON.stringify(e));
+          });
+        };
+  
+        await speak();
+      }
+    }catch(e){
+      alert(JSON.stringify(e));
+      console.error(e);
     }
+    
   }
 }

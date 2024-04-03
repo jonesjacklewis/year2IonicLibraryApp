@@ -9,6 +9,8 @@ import { DataService } from '../services/data.service';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { SpeechService } from '../services/speech.service';
 
+import { Platform } from '@ionic/angular';
+
 @Component({
   selector: 'app-optionsTab',
   templateUrl: 'optionsTab.page.html',
@@ -20,11 +22,12 @@ export class OptionsTabPage {
 
   public selectedLanguage: string = 'en-GB';
   public textToSpeech: boolean = false;
+  public isIOS: boolean = this.platform.is('ios');
 
   public allowedLanguages: Language[] = [];
 
 
-  constructor(public translateService: TranslateService, public dataService: DataService, public speechService: SpeechService) { 
+  constructor(public translateService: TranslateService, public dataService: DataService, public speechService: SpeechService, private platform: Platform) { 
     const languages: string[] = translateService.getLangs();
 
     languages.forEach((language: string) => {
