@@ -1,4 +1,9 @@
 {
-    "HELLO": "Helo"
-  }
-  
+  "ADD_BOOKS": "Ychwanegu Llyfrau",
+  "MAP_MODE": "Modd Map",
+  "OPTIONS": "Opsiynau",
+  "VIEW_BOOKS": "Gweld Llyfrau",
+  "WELSH": "Cymraeg",
+  "ENGLISH": "Saesneg",
+  "LANGUAGE": "Iaith"
+}

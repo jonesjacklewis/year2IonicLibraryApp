@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Options
+      {{ "OPTIONS" | translate }}
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,7 +9,21 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Options</ion-title>
+      <ion-title size="large">
+        {{ "OPTIONS" | translate }}
+      </ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-list>
+    <ion-item>
+      <ion-label>
+        {{ "LANGUAGE" | translate }}
+      </ion-label>
+      <ion-select [(ngModel)]="selectedLanguage" (ionChange)="changeLanguage()">
+        <ion-select-option *ngFor="let language of allowedLanguages" [value]="language.code">{{language.name | translate}}</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-list>
+
 </ion-content>

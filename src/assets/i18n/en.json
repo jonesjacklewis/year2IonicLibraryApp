@@ -1,4 +1,9 @@
 {
-    "HELLO": "Hello World"
-  }
-  
+  "ADD_BOOKS": "Add Books",
+  "MAP_MODE": "Map Mode",
+  "OPTIONS": "Options",
+  "VIEW_BOOKS": "View Books",
+  "WELSH": "Welsh",
+  "ENGLISH": "English",
+  "LANGUAGE": "Language"
+}

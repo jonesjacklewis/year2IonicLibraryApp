@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
@@ -7,10 +8,10 @@ import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular/stan
   templateUrl: 'addBooksTab.page.html',
   styleUrls: ['addBooksTab.page.scss'],
   standalone: true,
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent]
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, TranslateModule]
 })
 export class AddBooksTabPage {
 
-  constructor() {}
+  constructor(public translateService: TranslateService) {}
 
 }
