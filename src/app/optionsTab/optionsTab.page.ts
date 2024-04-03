@@ -10,6 +10,7 @@ import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { SpeechService } from '../services/speech.service';
 
 import { Platform } from '@ionic/angular';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-optionsTab',
@@ -45,11 +46,16 @@ export class OptionsTabPage {
     if(this.translateService.currentLang){
       this.selectedLanguage = this.translateService.currentLang;
     }
+    
 
   }
 
   async ionViewWillEnter(){
     this.textToSpeech = await this.speechService.textToSpeechIsEnabled();
+
+    if(this.textToSpeech){
+      this.speechService.speak(this.translateService.instant('OPTIONS_TAB'));
+    }
   }
 
 
@@ -58,8 +64,14 @@ export class OptionsTabPage {
       this.translateService.use(this.selectedLanguage);
       await this.dataService.updateConfig('language', 'string', this.selectedLanguage);
 
-      if(this.textToSpeech){
-        this.textToSpeech = await this.speechService.enableTextToSpeech();
+
+      if(!await this.speechService.isSupportedLanguage(this.selectedLanguage)){
+        
+        this.translateService.getTranslation(this.selectedLanguage).subscribe(async (translation: any) => {
+          alert(translation.TTS_NOT_SUPPORTED);
+          this.textToSpeech = await this.speechService.disableTextToSpeech();
+        });
+       
       }
 
     }

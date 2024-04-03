@@ -24,17 +24,22 @@ export class SpeechService {
     return this.ttsEnabled;
   }
 
-  public async enableTextToSpeech(): Promise<boolean> {
+  public async isSupportedLanguage(language: string): Promise<boolean> {
     const languages: string[] = (await TextToSpeech.getSupportedLanguages()).languages;
+    return languages.includes(language);
+  }
 
-    if(languages.includes(this.translateService.currentLang)){
-      this.ttsEnabled = true;
+  public async disableTextToSpeech(): Promise<boolean> {
+    try{
+      alert("Disabling TTS");
+      this.ttsEnabled = false;
       await this.dataService.updateConfig('tts', 'boolean', this.ttsEnabled);
-      return true;
+      return this.ttsEnabled;
+    }catch(e){
+      alert(JSON.stringify(e));
+      return false;
     }
-
-    alert(this.translateService.instant('TTS_NOT_SUPPORTED'));
-    return false;
+    
   }
 
   public async toggleTextToSpeech(): Promise<boolean> {
@@ -68,14 +73,13 @@ export class SpeechService {
             category: 'playback',
           }).then(() => {
           }).catch((e) => {
-            alert(JSON.stringify(e));
+            console.error(e);
           });
         };
   
         await speak();
       }
     }catch(e){
-      alert(JSON.stringify(e));
       console.error(e);
     }
     
