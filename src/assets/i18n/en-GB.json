@@ -12,5 +12,22 @@
   "TTS_DISABLED": "Text to Speech Disabled",
   "GEOLOCATION_NOT_AVAILABLE": "Geolocation is not available",
   "MAP_MODE_WELCOME": "Welcome to Map Mode!",
-  "MAP_P_TAG": "Explore libraries near you. Tap on any marker to see more details about the library. Zoom in and out to find more libraries around your location."
+  "MAP_P_TAG": "Explore libraries near you. Tap on any marker to see more details about the library. Zoom in and out to find more libraries around your location.",
+  "ADD_BOOK_MANUAL": "Manually Add Book",
+  "ADD_BOOK_SEARCH": "Add Book via Search",
+  "ADD_BOOK_SCAN": "Add Book by Scanning ISBN",
+  "INVALID_ISBN": "Invalid ISBN",
+  "TITLE": "Title",
+  "INVALID_TITLE": "Title length must be more than 0",
+  "AUTHOR": "Author",
+  "INVALID_AUTHOR": "Author length must be more than 0",
+  "PAGE_COUNT": "Page Count",
+  "INVALID_PAGE_COUNT": "Page Count must be more than 0",
+  "PUBLISHED_DATE": "Date Published",
+  "INVALID_PUBLISHED_DATE": "The published date can't be in the future",
+  "IMAGE_URL": "Image URL",
+  "INVALID_IMAGE_URL": "Image URL is not valid",
+  "CANCEL": "Cancel",
+  "CANCELING": "Canceling",
+  "ADD_BOOK": "Add Book"
 }

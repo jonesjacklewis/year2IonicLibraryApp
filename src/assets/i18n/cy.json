@@ -12,5 +12,22 @@
   "TTS_DISABLED": "Testun i Leferydd Wedi'i Analluogi",
   "GEOLOCATION_NOT_AVAILABLE": "Nid yw Geoleoliad ar gael.",
   "MAP_MODE_WELCOME": "Croeso i Modd Map!",
-  "MAP_P_TAG": "Archwilio llyfrgelloedd gerllaw. Tapiwch ar unrhyw farciwr i weld mwy o fanylion am y llyfrgell. Chwyddo i mewn ac allan i ddod o hyd i fwy o lyfrgelloedd o amgylch eich lleoliad."
+  "MAP_P_TAG": "Archwilio llyfrgelloedd gerllaw. Tapiwch ar unrhyw farciwr i weld mwy o fanylion am y llyfrgell. Chwyddo i mewn ac allan i ddod o hyd i fwy o lyfrgelloedd o amgylch eich lleoliad.",
+  "ADD_BOOK_MANUAL": "Ychwanegu Llyfr â Llaw",
+  "ADD_BOOK_SEARCH": "Ychwanegu Llyfr trwy Chwilio",
+  "ADD_BOOK_SCAN": "Ychwanegu Llyfr drwy Sganio ISBN",
+  "INVALID_ISBN": "ISBN Annilys",
+  "TITLE": "Teitl",
+  "INVALID_TITLE": "Rhaid i hyd y teitl fod yn fwy na 0",
+  "AUTHOR": "Awdur",
+  "INVALID_AUTHOR": "Rhaid i hyd y awdur fod yn fwy na 0",
+  "PAGE_COUNT": "Cyfrif Tudalennau",
+  "INVALID_PAGE_COUNT": "Rhaid i'r Cyfrif Tudalennau fod yn fwy na 0",
+  "PUBLISHED_DATE": "Dyddiad Cyhoeddi",
+  "INVALID_PUBLISHED_DATE": "Ni all y dyddiad cyhoeddi fod yn y dyfodol",
+  "IMAGE_URL": "URL Delwedd",
+  "INVALID_IMAGE_URL": "Nid yw URL y ddelwedd yn ddily",
+  "CANCEL": "Canslo",
+  "CANCELING": "Yn Canslo",
+  "ADD_BOOK": "Ychwanegu Llyfr"
 }

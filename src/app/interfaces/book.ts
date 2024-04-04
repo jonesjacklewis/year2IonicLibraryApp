@@ -4,5 +4,5 @@ export interface Book {
     author: string;
     pageCount: number;
     publishedDate: Date;
-    imageBase64: string;
+    imageUrl: string;
 }

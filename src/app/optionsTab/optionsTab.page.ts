@@ -6,11 +6,9 @@ import { FormsModule } from '@angular/forms';
 import { Language } from '../interfaces/language';
 import { DataService } from '../services/data.service';
 
-import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { SpeechService } from '../services/speech.service';
 
 import { Platform } from '@ionic/angular';
-import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-optionsTab',

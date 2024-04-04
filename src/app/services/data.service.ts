@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Book } from '../interfaces/book';
+import { interval, take, lastValueFrom } from 'rxjs';
 
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +16,7 @@ export class DataService {
   private sqlite: SQLiteConnection;
 
 
-  constructor(private platform: Platform) {
+  constructor(private platform: Platform, private http: HttpClient) {
     this.sqlite = new SQLiteConnection(CapacitorSQLite);
     this.platform.ready().then(() => {
       return;
@@ -28,6 +31,12 @@ export class DataService {
       return await this.setConfigWeb(name, dataType, stringValue);
     }
     return await this.setConfigSqlite(name, dataType, stringValue);
+  }
+
+  public async addBook(book: Book): Promise<void> {
+    if (this.getPlatform() == 'web') {
+      return await this.addBookWeb(book);
+    }
   }
 
   public async setLocalStorage(name: string, value: any): Promise<void> {
@@ -74,6 +83,75 @@ export class DataService {
     return await this.updateConfigSqlite(name, dataType, stringValue);
   }
 
+  public async getAllBooks(): Promise<Book[]> {
+    if (this.getPlatform() == 'web') {
+      return await this.getAllBooksWeb();
+    }
+    return [];
+  }
+
+  private async getAllBooksWeb(): Promise<Book[]> {
+    return new Promise<Book[]>((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["Books"], "readonly");
+        const objectStore = transaction.objectStore("Books");
+        const getRequest = objectStore.getAll();
+
+        const books: Book[] = [];
+
+
+
+        getRequest.onsuccess = () => {
+          for (const book of getRequest.result) {
+            books.push({
+              isbn: book.isbn,
+              title: book.title,
+              author: book.author,
+              pageCount: book.pageCount,
+              publishedDate: book.publishedDate,
+              imageUrl: book.imageUrl
+            });
+          }
+
+          resolve(books);
+        };
+
+        getRequest.onerror = () => {
+          resolve([]);
+        };
+      };
+
+      request.onerror = () => {
+        reject([]);
+      };
+    });
+  }
+
+  private async setDefaultBooksWeb(): Promise<void> {
+    // read file from assets folder named defaultBookData.json
+    
+    const data = (await lastValueFrom(this.http.get('assets/defaultBookData.json'))) as Book[];
+
+    for (const book of data) {
+      try{
+        await this.addOfflineBookWeb(book);
+      }catch{
+        continue;
+      }
+    }
+
+  }
+
+
+ 
+
+  
+
+
+
   public async initDB() {
     if (this.getPlatform() === 'web') {
       await this.setUpIndexedDB();
@@ -82,6 +160,7 @@ export class DataService {
       if (!languageExists) {
         await this.setConfigWeb('language', 'string', 'en-GB');
         await this.setConfigWeb('tts', 'boolean', 'false');
+        await this.setDefaultBooksWeb();
       }
     } else {
       await this.setUpSQLite();
@@ -121,6 +200,29 @@ export class DataService {
         if (!db.objectStoreNames.contains("LocalStorage")) {
           db.createObjectStore("LocalStorage", { keyPath: "Name" });
         }
+        if (!db.objectStoreNames.contains("OfflineBooks")) {
+          const bookStore = db.createObjectStore("OfflineBooks", { keyPath: "id", autoIncrement: true });
+          // Creating indexes for other properties to enable querying
+          bookStore.createIndex("isbn", "isbn", { unique: false });
+          bookStore.createIndex("title", "title", { unique: false });
+          bookStore.createIndex("author", "author", { unique: false });
+          bookStore.createIndex("publishedDate", "publishedDate", { unique: false });
+          bookStore.createIndex("pageCount", "pageCount", { unique: false });
+          bookStore.createIndex("imageUrl", "imageUrl", { unique: false });
+          // No index for pageCount or image as would not be used for querying
+        }
+
+        if (!db.objectStoreNames.contains("Books")) {
+          const bookStore = db.createObjectStore("Books", { keyPath: "id", autoIncrement: true });
+          // Creating indexes for other properties to enable querying
+          bookStore.createIndex("isbn", "isbn", { unique: false });
+          bookStore.createIndex("title", "title", { unique: false });
+          bookStore.createIndex("author", "author", { unique: false });
+          bookStore.createIndex("publishedDate", "publishedDate", { unique: false });
+          bookStore.createIndex("pageCount", "pageCount", { unique: false });
+          bookStore.createIndex("imageUrl", "imageUrl", { unique: false });
+          // No index for pageCount or image as would not be used for querying
+        }
         
         resolve(); // Resolve the promise as the upgrade is the setup process
       };
@@ -134,6 +236,77 @@ export class DataService {
       };
     });
   }
+
+  private async addOfflineBookWeb(book: Book): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["OfflineBooks"], "readwrite");
+        const objectStore = transaction.objectStore("OfflineBooks");
+
+        const bookItem = {
+          isbn: book.isbn,
+          title: book.title,
+          author: book.author,
+          pageCount: book.pageCount,
+          publishedDate: book.publishedDate,
+          imageUrl: book.imageUrl
+        };
+        const putRequest = objectStore.put(bookItem); // `put` either adds a new entry or updates an existing one
+
+        putRequest.onsuccess = () => {
+          resolve();
+        };
+
+        putRequest.onerror = () => {
+          console.error("Error saving book:", putRequest.error);
+          resolve();
+        };
+      };
+
+      request.onerror = () => {
+        resolve();
+      };
+    });
+  }
+
+  private async addBookWeb(book: Book): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["Books"], "readwrite");
+        const objectStore = transaction.objectStore("Books");
+
+        const bookItem = {
+          isbn: book.isbn,
+          title: book.title,
+          author: book.author,
+          pageCount: book.pageCount,
+          publishedDate: book.publishedDate,
+          imageUrl: book.imageUrl
+        };
+        const putRequest = objectStore.put(bookItem); // `put` either adds a new entry or updates an existing one
+
+        putRequest.onsuccess = () => {
+          resolve();
+        };
+
+        putRequest.onerror = () => {
+          console.error("Error saving book:", putRequest.error);
+          resolve();
+        };
+      };
+
+      request.onerror = () => {
+        resolve();
+      };
+    });
+  }
+ 
 
   private async languageConfigExistsWeb(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
@@ -334,34 +507,7 @@ export class DataService {
       }catch{
         this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
       }
-      // alert('Setting up SQLite DB');
-      // // Check if the SQLite DB exists, if not, create it
-      // const databasesList = await this.sqlite.getDatabaseList();
-
-      // let databaseValues: any[] | undefined = [];
-
-      // if(databasesList === undefined){
-      //   databaseValues = [];
-      // }
       
-      // databaseValues = databasesList.values;
-
-      // let dbExists = false;
-
-      // if(databaseValues !== undefined){
-      //   dbExists = databasesList.values?.includes(this.dbName) ? true : false;
-      // }else{
-      //   dbExists = false;
-      // }
-
-      // if (!dbExists) {
-      //   // Create the DB if it doesn't exist
-      //   this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
-      // } else {
-      //   // Retrieve the existing DB connection
-      //   this.dbConnection = await this.sqlite.retrieveConnection(this.dbName, false);
-      // }
-
       await this.dbConnection.open();
 
       // SQL statement to create the Config table if it doesn't exist
@@ -377,6 +523,16 @@ export class DataService {
           Value TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS OfflineBooks (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          isbn TEXT NOT NULL,
+          title TEXT NOT NULL,
+          author TEXT NOT NULL,
+          pageCount INTEGER NOT NULL,
+          publishedDate TEXT NOT NULL,
+          imageUrl TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS Books (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           isbn TEXT NOT NULL,
@@ -384,7 +540,7 @@ export class DataService {
           author TEXT NOT NULL,
           pageCount INTEGER NOT NULL,
           publishedDate TEXT NOT NULL,
-          imageBase64 TEXT NOT NULL
+          imageUrl TEXT NOT NULL
         );
       `;
 

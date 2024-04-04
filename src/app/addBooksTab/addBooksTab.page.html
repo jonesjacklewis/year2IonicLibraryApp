@@ -1,8 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      {{"ADD_BOOKS" | translate}}
-    </ion-title>
+    <ion-title>{{"ADD_BOOKS" | translate}}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -12,4 +10,75 @@
       <ion-title size="large">{{"ADD_BOOKS" | translate}}</ion-title>
     </ion-toolbar>
   </ion-header>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-button expand="full" class="custom-button" (click)='addBookManually()'>
+          <ion-icon slot="end" name="add-circle-outline"></ion-icon>
+          {{ "ADD_BOOK_MANUAL" | translate }}
+        </ion-button>
+      </ion-col>
+
+      <ion-col *ngIf="!showAddBookManually">
+        <ion-button expand="full" class="custom-button" (click)="addBookSearch()">
+          <ion-icon slot="end" name="search-circle-outline"></ion-icon>
+          {{ "ADD_BOOK_SEARCH" | translate }}
+        </ion-button>
+      </ion-col>
+
+      <ion-col *ngIf="!showAddBookManually">
+        <ion-button expand="full" class="custom-button" (click)="addBookScan()">
+          <ion-icon slot="end" name="scan-circle-outline"></ion-icon>
+          {{ "ADD_BOOK_SCAN" | translate }}
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-card *ngIf="showAddBookManually">
+    <ion-card-header>
+      <ion-card-title>{{ "ADD_BOOK_MANUAL" | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item>
+          <ion-button expand="full" (click)="cancel()" color="danger" size="large">
+            <ion-icon slot="end" name="backspace-outline"></ion-icon>
+            {{ "CANCEL" | translate }}
+          </ion-button>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">ISBN</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="isbn" required (ionChange)="verifyIsbn()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">{{ "TITLE" | translate }}</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="title" required (ionChange)="verifyTitle()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">{{ "AUTHOR" | translate }}</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="author" required (ionChange)="verifyAuthor()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">{{ "PAGE_COUNT" | translate }}</ion-label>
+          <ion-input ngDefaultControl type="number" [(ngModel)]="pageCount" min="1" required (ionChange)="verifyPageCount()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">{{ "PUBLISHED_DATE" | translate }}</ion-label> <br>
+          <ion-input ngDefaultControl type="date" displayFormat="yyyy-MM-dd" [(ngModel)]="publishedDate" required (ionChange)="verifyPublishedDate()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">{{ "IMAGE_URL" | translate }}</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="imageUrl" required (ionChange)="verifyImageUrl()"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-button expand="full" (click)="addBookManuallyVerify()" color="success" size="large">
+            <ion-icon slot="end" name="add-circle-outline"></ion-icon>
+            {{ "ADD_BOOK" | translate }}
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

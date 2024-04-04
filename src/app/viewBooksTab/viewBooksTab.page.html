@@ -13,4 +13,22 @@
     </ion-toolbar>
   </ion-header>
 
+  <ion-grid>
+    <ion-row>
+      <ion-col size="12" size-md="6" size-lg="4" size-xl="3" *ngFor="let book of books">
+        <ion-card>
+          <img [src]="book.imageUrl" alt="Book cover" />
+          <ion-card-header>
+            <ion-card-title>{{ book.title }}</ion-card-title>
+            <ion-card-subtitle>{{ book.author }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p>ISBN: {{ book.isbn }}</p>
+            <p>Page Count: {{ book.pageCount }}</p>
+            <p>Published Date: {{ book.publishedDate | date:'mediumDate' }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>
