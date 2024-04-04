@@ -30,6 +30,16 @@ export class DataService {
     return await this.setConfigSqlite(name, dataType, stringValue);
   }
 
+  public async setLocalStorage(name: string, value: any): Promise<void> {
+    const stringValue = JSON.stringify(value);
+
+
+    if (this.getPlatform() == 'web') {
+      return await this.setLocalStorageWeb(name, stringValue);
+    }
+    return await this.setLocalStorageSqlite(name, stringValue);
+  }
+
   public async getConfig(name: string): Promise<any> {
     if (this.getPlatform() == 'web') {
       return await this.getConfigWeb(name);
@@ -40,9 +50,24 @@ export class DataService {
     return result;
   }
 
-  public async updateConfig(name: string, dataType: string, value: any): Promise<void> {
-    const stringValue = JSON.stringify(value);
+  public async getLocalStorage(name: string): Promise<any> {
+    if (this.getPlatform() == 'web') {
+      return await this.getLocalStorageWeb(name);
+    }
+    
+    const result = await this.getLocalStorageSqlite(name);
 
+    return result;
+  }
+
+  public async updateConfig(name: string, dataType: string, value: any): Promise<void> {
+
+    let stringValue: string = "";
+    if(dataType !== 'string'){
+      stringValue = JSON.stringify(value);
+    }else{
+      stringValue = value;
+    }
     if (this.getPlatform() == 'web') {
       return await this.updateConfigWeb(name, dataType, stringValue);
     }
@@ -70,7 +95,18 @@ export class DataService {
   }
 
   private getPlatform(): string {
-    return this.platform.is('ios') || this.platform.is('android') ? 'mobile' : 'web';
+
+    if(this.platform.is('ios')){
+      return 'ios';
+    }
+
+    if(this.platform.is('android')){
+      return 'android';
+    }
+
+    return 'web';
+
+    // return this.platform.is('ios') || this.platform.is('android') ? 'mobile' : 'web';
   }
 
   private async setUpIndexedDB() {
@@ -82,6 +118,10 @@ export class DataService {
         if (!db.objectStoreNames.contains("Config")) {
           db.createObjectStore("Config", { keyPath: "Name" });
         }
+        if (!db.objectStoreNames.contains("LocalStorage")) {
+          db.createObjectStore("LocalStorage", { keyPath: "Name" });
+        }
+        
         resolve(); // Resolve the promise as the upgrade is the setup process
       };
 
@@ -148,13 +188,41 @@ export class DataService {
     });
   }
 
+  private async setLocalStorageWeb(name: string, value: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["LocalStorage"], "readwrite");
+        const objectStore = transaction.objectStore("LocalStorage");
+
+        const storageItem = { Name: name, Value: value };
+        const putRequest = objectStore.put(storageItem); // `put` either adds a new entry or updates an existing one
+
+        putRequest.onsuccess = () => {
+          resolve();
+        };
+
+        putRequest.onerror = () => {
+          console.error("Error saving local storage item:", putRequest.error);
+          reject(putRequest.error);
+        };
+      };
+
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+
   private parseConfigValue(value: string, dataType: string): any {
     switch (dataType) {
       case 'string':
-        // value is currently \"cy\" should be cy as a string but without the quotes and backslashes
-        const jsonParsed = JSON.parse(value);
-        // remove the quotes from start and end of the string
-        return jsonParsed.substring(1, jsonParsed.length - 1);
+       if(value.startsWith('"') && value.endsWith('"')) {
+          value = value.slice(1, -1);
+        }
+        return value.trim();
       case 'integer':
         return parseInt(value, 10);
       case 'float':
@@ -164,6 +232,38 @@ export class DataService {
       default:
         return value;
     }
+  }
+
+  private async getLocalStorageWeb(name: string): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["LocalStorage"], "readonly");
+        const objectStore = transaction.objectStore("LocalStorage");
+        const getRequest = objectStore.get(name);
+
+        getRequest.onsuccess = () => {
+          if (!getRequest.result) {
+            // reject(`Local Storage item '${name}' not found`);
+            resolve(null);
+          }
+
+          const localStorageItem = getRequest.result;
+          resolve(localStorageItem ? localStorageItem.Value : null);
+
+        };
+
+        getRequest.onerror = () => {
+          reject(getRequest.error);
+        };
+      };
+
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
   }
 
   private async getConfigWeb(name: string): Promise<any> {
@@ -228,25 +328,39 @@ export class DataService {
 
   private async setUpSQLite() {
     try {
-      // Check if the SQLite DB exists, if not, create it
-      const databasesList = await this.sqlite.getDatabaseList();
-      const databaseValues = databasesList.values;
 
-      let dbExists = false;
-
-      if(databaseValues !== undefined){
-        dbExists = databasesList.values?.includes(this.dbName) ? true : false;
-      }else{
-        dbExists = false;
-      }
-
-      if (!dbExists) {
-        // Create the DB if it doesn't exist
-        this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
-      } else {
-        // Retrieve the existing DB connection
+      try{
         this.dbConnection = await this.sqlite.retrieveConnection(this.dbName, false);
+      }catch{
+        this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
       }
+      // alert('Setting up SQLite DB');
+      // // Check if the SQLite DB exists, if not, create it
+      // const databasesList = await this.sqlite.getDatabaseList();
+
+      // let databaseValues: any[] | undefined = [];
+
+      // if(databasesList === undefined){
+      //   databaseValues = [];
+      // }
+      
+      // databaseValues = databasesList.values;
+
+      // let dbExists = false;
+
+      // if(databaseValues !== undefined){
+      //   dbExists = databasesList.values?.includes(this.dbName) ? true : false;
+      // }else{
+      //   dbExists = false;
+      // }
+
+      // if (!dbExists) {
+      //   // Create the DB if it doesn't exist
+      //   this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
+      // } else {
+      //   // Retrieve the existing DB connection
+      //   this.dbConnection = await this.sqlite.retrieveConnection(this.dbName, false);
+      // }
 
       await this.dbConnection.open();
 
@@ -257,6 +371,21 @@ export class DataService {
           Type TEXT NOT NULL,
           Value TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS LocalStorage (
+          Name TEXT PRIMARY KEY NOT NULL,
+          Value TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS Books (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          isbn TEXT NOT NULL,
+          title TEXT NOT NULL,
+          author TEXT NOT NULL,
+          pageCount INTEGER NOT NULL,
+          publishedDate TEXT NOT NULL,
+          imageBase64 TEXT NOT NULL
+        );
       `;
 
       // Execute the SQL statement to create the table
@@ -265,12 +394,16 @@ export class DataService {
       console.log('SQLite setup completed: Config table is ready.');
     } catch (error) {
       console.error('Error setting up SQLite DB:', error);
+      alert(JSON.stringify(error));
     }
   }
 
   private languageConfigExistsSqlite(): Promise<boolean> {
     return new Promise<boolean>(async (resolve, reject) => {
       try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
         const sqlSelect = "SELECT * FROM Config WHERE Name = 'language';";
         const result = await this.dbConnection?.query(sqlSelect);
 
@@ -289,6 +422,9 @@ export class DataService {
 
   private setConfigSqlite(name: string, dataType: string, value: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
+      if(!this.dbConnection && this.getPlatform() === 'android'){
+        await this.setUpSQLite();
+      }
       try {
         const sqlInsert = `
           INSERT INTO Config (Name, Type, Value)
@@ -313,24 +449,58 @@ export class DataService {
     });
   }
 
+  private setLocalStorageSqlite(name: string, value: string): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if(!this.dbConnection && this.getPlatform() === 'android'){
+        await this.setUpSQLite();
+      }
+      try {
+        const sqlInsert = `
+        INSERT OR REPLACE INTO LocalStorage (Name, Value) VALUES (?, ?);
+        `;
+
+        const query = this.dbConnection?.query(sqlInsert, [name, value])
+
+        if(!query){
+          reject('Query is undefined');
+          return;
+        }
+
+        await query;
+
+        resolve();
+      } catch (error) {
+        alert(JSON.stringify(error));
+        console.error('Error setting local storage:', error);
+        reject(error);
+      }
+    });
+  }
+
   private getConfigSqlite(name: string): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
       try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
         const sqlSelect = "SELECT * FROM Config WHERE Name = ?;";
         const result = await this.dbConnection?.query(sqlSelect, [name]);
 
         if(!result?.values || !result.values){
-          reject('No values found');
+          // reject('No values found');
+          resolve(null);
           return;
         }
 
         if (result.values.length === 0) {
-          reject(`Config item '${name}' not found`);
+          // reject(`Config item '${name}' not found`);
+          resolve(null);
           return;
         }
 
         const configItem = result.values[0];
         const parsedValue = this.parseConfigValue(configItem.Value, configItem.Type);
+
         resolve(parsedValue);
       } catch (error) {
         console.error('Error getting language config:', error);
@@ -339,9 +509,43 @@ export class DataService {
     });
   }
 
+  private getLocalStorageSqlite(name: string): Promise<any> {
+    return new Promise<any>(async (resolve, reject) => {
+      try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
+        const sqlSelect = "SELECT * FROM LocalStorage WHERE Name = ?;";
+        const result = await this.dbConnection?.query(sqlSelect, [name]);
+
+        if(!result?.values || !result.values){
+          resolve(null);
+          return;
+        }
+
+        if (result.values.length === 0) {
+          resolve(null);
+          return;
+        }
+
+        const localStorageItem = result.values[0];
+        resolve(localStorageItem.Value);
+      } catch (error) {
+        alert(JSON.stringify(error));
+        resolve(null);
+      }
+    });
+  }
+
   private updateConfigSqlite(name: string, dataType: string, value: any): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
         const sqlUpdate = `
           UPDATE Config
           SET Value = ?

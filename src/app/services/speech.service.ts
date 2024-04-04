@@ -31,7 +31,6 @@ export class SpeechService {
 
   public async disableTextToSpeech(): Promise<boolean> {
     try{
-      alert("Disabling TTS");
       this.ttsEnabled = false;
       await this.dataService.updateConfig('tts', 'boolean', this.ttsEnabled);
       return this.ttsEnabled;

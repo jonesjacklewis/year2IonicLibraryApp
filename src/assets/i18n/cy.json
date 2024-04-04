@@ -9,5 +9,8 @@
   "TEXT_TO_SPEECH": "Testun i Araith",
   "TTS_NOT_SUPPORTED": "Nid yw Testun i Leferydd yn cael ei gefnogi yn Gymraeg.",
   "TTS_ENABLED": "Testun i Leferydd Wedi'i Alluogi",
-  "TTS_DISABLED": "Testun i Leferydd Wedi'i Analluogi"
+  "TTS_DISABLED": "Testun i Leferydd Wedi'i Analluogi",
+  "GEOLOCATION_NOT_AVAILABLE": "Nid yw Geoleoliad ar gael.",
+  "MAP_MODE_WELCOME": "Croeso i Modd Map!",
+  "MAP_P_TAG": "Archwilio llyfrgelloedd gerllaw. Tapiwch ar unrhyw farciwr i weld mwy o fanylion am y llyfrgell. Chwyddo i mewn ac allan i ddod o hyd i fwy o lyfrgelloedd o amgylch eich lleoliad."
 }

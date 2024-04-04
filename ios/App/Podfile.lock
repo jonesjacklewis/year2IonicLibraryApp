@@ -10,6 +10,8 @@ PODS:
   - CapacitorCommunityTextToSpeech (3.0.1):
     - Capacitor
   - CapacitorCordova (5.7.4)
+  - CapacitorGeolocation (5.0.7):
+    - Capacitor
   - CapacitorHaptics (5.0.7):
     - Capacitor
   - CapacitorKeyboard (5.0.8):
@@ -29,6 +31,7 @@ DEPENDENCIES:
   - "CapacitorCommunitySqlite (from `../../node_modules/@capacitor-community/sqlite`)"
   - "CapacitorCommunityTextToSpeech (from `../../node_modules/@capacitor-community/text-to-speech`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
@@ -49,6 +52,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor-community/text-to-speech"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorGeolocation:
+    :path: "../../node_modules/@capacitor/geolocation"
   CapacitorHaptics:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorKeyboard:
@@ -62,12 +67,13 @@ SPEC CHECKSUMS:
   CapacitorCommunitySqlite: 6e2754dde799d618a8e75e409ccc67ec9c189460
   CapacitorCommunityTextToSpeech: a47d2746124fc06f1018791b3f154cfd2c5c4fe6
   CapacitorCordova: a6e87fccc0307dee7aec1560ec9398485f2b0ce7
+  CapacitorGeolocation: 918a292459542bcce98433f9e7c7909f8c72838a
   CapacitorHaptics: 7c7c206f0c96a628fed073830c96d28c4b2e772e
   CapacitorKeyboard: aec619a578235c6ce279075009a2689c2cf5c42c
   CapacitorStatusBar: f390fbb49b82ffb754ea4b3cf71dc8b048baf3e7
   SQLCipher: 838309284f29953a28ad2e81d87d55ea6b7c74fd
   ZIPFoundation: fa9ae5af13b7cf168245f24d1c672a4fb972e37f
 
-PODFILE CHECKSUM: e5711dad62d23b7bd55df440247260e2066d7a1f
+PODFILE CHECKSUM: f2faa1ed612d61f7a208941f9448a107a3ac5a85
 
 COCOAPODS: 1.15.2
