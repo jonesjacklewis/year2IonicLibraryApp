@@ -23,5 +23,9 @@
   </div>
 
   <!-- Map Container -->
-  <div id="map" style="height: 60vh; position: relative;"></div>
+  <div id="map" style="height: 60vh; position: relative;" *ngIf="hasConnection"></div>
+
+  <p *ngIf="!hasConnection">
+    {{ "NO_INTERNET_CONNECTION" | translate }}
+  </p>
 </ion-content>

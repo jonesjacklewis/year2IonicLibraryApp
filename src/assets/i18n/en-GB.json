@@ -29,5 +29,6 @@
   "INVALID_IMAGE_URL": "Image URL is not valid",
   "CANCEL": "Cancel",
   "CANCELING": "Canceling",
-  "ADD_BOOK": "Add Book"
+  "ADD_BOOK": "Add Book",
+  "NO_INTERNET_CONNECTION": "No Internet Connnection available."
 }

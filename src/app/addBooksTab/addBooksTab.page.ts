@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonInput, IonHeader, IonToolbar, IonTitle, IonCardSubtitle, IonCardTitle, IonCardContent, IonList, IonGrid, IonRow, IonCol, IonContent, IonButton, IonIcon, IonLabel, IonItem, IonCard, IonCardHeader } from '@ionic/angular/standalone';
+import { IonInput, IonSegment, IonSegmentButton, IonHeader, IonToolbar, IonTitle, IonCardSubtitle, IonCardTitle, IonCardContent, IonList, IonGrid, IonRow, IonCol, IonContent, IonButton, IonIcon, IonLabel, IonItem, IonCard, IonCardHeader } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SpeechService } from '../services/speech.service';
 import { addIcons } from 'ionicons';
@@ -12,6 +12,7 @@ import { catchError, map, throwError } from 'rxjs';
 import { DataService } from '../services/data.service';
 import { Book } from '../interfaces/book';
 import * as moment from 'moment';
+import { Network } from '@capacitor/network';
 
 
 
@@ -20,7 +21,7 @@ import * as moment from 'moment';
   templateUrl: 'addBooksTab.page.html',
   styleUrls: ['addBooksTab.page.scss'],
   standalone: true,
-  imports: [IonHeader, IonCard, IonCardTitle, IonCardSubtitle, IonCardContent, IonInput, IonList, IonGrid, IonRow, IonCol, IonCardHeader, IonToolbar, IonTitle, IonContent, TranslateModule, IonButton, IonIcon, IonLabel, CommonModule, FormsModule, IonItem, ReactiveFormsModule],
+  imports: [IonHeader, IonSegment, IonSegmentButton, IonCard, IonCardTitle, IonCardSubtitle, IonCardContent, IonInput, IonList, IonGrid, IonRow, IonCol, IonCardHeader, IonToolbar, IonTitle, IonContent, TranslateModule, IonButton, IonIcon, IonLabel, CommonModule, FormsModule, IonItem, ReactiveFormsModule],
 })
 export class AddBooksTabPage {
 
@@ -36,6 +37,7 @@ export class AddBooksTabPage {
 
   // Search Book Vars
   public showAddBookSearch = false;
+  public searchType: string = "";
   public books: Book[] = [];
 
   constructor(
@@ -209,7 +211,13 @@ export class AddBooksTabPage {
   }
 
   async searchBookIsbn() {
-    this.books = await this.bookService.getBooksByApiByIsbn(this.isbn);
+    const hasConnection = await Network.getStatus();
+    this.books = await this.bookService.getBooksByApiByIsbn(this.isbn, hasConnection.connected);
+  }
+
+  async searchBookTitle() {
+    const hasConnection = await Network.getStatus();
+    this.books = await this.bookService.getBooksByApiByTitle(this.title, hasConnection.connected);
   }
 
   async addBookSearchVerify(book: Book) {

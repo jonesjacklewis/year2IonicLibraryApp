@@ -29,5 +29,6 @@
   "INVALID_IMAGE_URL": "Nid yw URL y ddelwedd yn ddily",
   "CANCEL": "Canslo",
   "CANCELING": "Yn Canslo",
-  "ADD_BOOK": "Ychwanegu Llyfr"
+  "ADD_BOOK": "Ychwanegu Llyfr",
+  "NO_INTERNET_CONNECTION": "Dim cysylltiad rhyngrwyd ar gael."
 }

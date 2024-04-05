@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { Book } from '../interfaces/book';
+import { Book, OfflineBook } from '../interfaces/book';
 import { interval, take, lastValueFrom } from 'rxjs';
+import * as moment from 'moment';
 
 import { HttpClient } from '@angular/common/http';
 
@@ -82,6 +83,68 @@ export class DataService {
       return await this.updateConfigWeb(name, dataType, stringValue);
     }
     return await this.updateConfigSqlite(name, dataType, stringValue);
+  }
+
+  public async getAllOfflineBooks(): Promise<Book[]> {
+    if (this.getPlatform() == 'web') {
+      return [];
+    }
+    return await this.getAllOfflineBooksSqlite();
+  }
+
+  private async getAllOfflineBooksSqlite(): Promise<Book[]> {
+    return new Promise<Book[]>(async (resolve, reject) => {
+      try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
+        const sqlSelect = "SELECT * FROM OfflineBooks;";
+        const result = await this.dbConnection?.query(sqlSelect);
+
+        if(!result?.values || !result.values){
+          resolve([]);
+          return;
+        }
+
+        const books: Book[] = result.values.map((book: any) => {
+
+          const isbn = book['isbn'];
+          const title = book['title'];
+          const author = book['author'];
+
+          let pageCount = book['pageCount'];
+          // make sure pageCount is a number
+          if (typeof pageCount === 'string') {
+            pageCount = parseInt(pageCount, 10);
+          }
+
+          let publishedDate = book['publishedDate'];
+          // make sure publishedDate is a Date object
+          if (typeof publishedDate === 'string') {
+            publishedDate = new Date(publishedDate);
+          }
+
+          const imageUrl = book['imageUrl'];
+
+          const bookItem: Book = {
+            isbn,
+            title,
+            author,
+            pageCount,
+            publishedDate,
+            imageUrl
+          };
+          return bookItem;
+      });
+
+        resolve(books);
+      } catch (error) {
+        alert(JSON.stringify(error));
+        console.error('Error getting all books:', error);
+        reject(error);
+      }
+    });
+
   }
 
   public async getAllBooks(): Promise<Book[]> {
@@ -201,6 +264,91 @@ export class DataService {
 
   }
 
+  private parseDate(dateString: string){
+    // support:
+    // just years: 1999
+    // years and months: 1999-01
+    // full date: 1999-01-01
+    // month day, year: January 1, 1999
+    // year-month-dayTHH:MM:SS: 1813-01-28T00:00:00
+
+    let date = moment(dateString, 'YYYY-MM-DD');
+
+    if(date.isValid()){
+      return date.toDate();
+    }
+
+    date = moment(dateString, 'YYYY-MM');
+
+    if(date.isValid()){
+      return date.toDate();
+    }
+
+    date = moment(dateString, 'YYYY');
+
+    if(date.isValid()){
+      return date.toDate();
+    }
+
+    date = moment(dateString, 'MMMM D, YYYY');
+
+    if(date.isValid()){
+      return date.toDate();
+    }
+
+    date = moment(dateString, 'YYYY-MM-DDTHH:mm:ss');
+
+    if(date.isValid()){
+      return date.toDate();
+    }
+
+    // return the epoch date if no valid date is found
+    return new Date(0);
+  }
+
+  private offlineBookToBook(offlineBook: any): Book{
+    const isbn = offlineBook.isbn13 || offlineBook.isbn;
+    const title = offlineBook.title;
+    const author = offlineBook.author;
+
+    let pageCount = offlineBook.pageCount;
+    // make sure pageCount is a number, if not convert it to a number
+    if(isNaN(pageCount)){
+      pageCount = parseInt(pageCount);
+    }
+
+    const publishedDate = this.parseDate(offlineBook.first_publish_date);
+    const imageUrl = offlineBook.imageUrl;
+
+    const book: Book = {
+      isbn: isbn,
+      title: title,
+      author: author,
+      pageCount: pageCount,
+      publishedDate: publishedDate,
+      imageUrl: imageUrl
+    };
+
+    return book;
+  }
+
+  private async setDefaultBooksSqlite(): Promise<void> {
+    // read file from assets folder named defaultBookData.json
+    
+    const dataAsOfflineBookArray = (await lastValueFrom(this.http.get('assets/defaultBookData.json'))) as OfflineBook[];
+
+    const books = dataAsOfflineBookArray.map((book: OfflineBook) => this.offlineBookToBook(book));
+
+    for (const book of books) {
+      try{
+        await this.addOfflineBookSqlite(book);
+      }catch{
+        continue;
+      }
+    }
+
+  }
+
 
  
 
@@ -215,17 +363,18 @@ export class DataService {
       const languageExists = await this.languageConfigExistsWeb();
       if (!languageExists) {
         await this.setConfigWeb('language', 'string', 'en-GB');
-        await this.setConfigWeb('tts', 'boolean', 'false');
-        await this.setDefaultBooksWeb();
       }
+      await this.setConfigWeb('tts', 'boolean', 'false');
+      await this.setDefaultBooksWeb();
     } else {
       await this.setUpSQLite();
 
       const languageExists = await this.languageConfigExistsSqlite();
       if (!languageExists) {
         await this.setConfigSqlite('language', 'string', 'en-GB');
-        await this.setConfigSqlite('tts', 'boolean', 'false');
       }
+      await this.setConfigSqlite('tts', 'boolean', 'false');
+      await this.setDefaultBooksSqlite();
     }
   }
 
@@ -555,33 +704,7 @@ export class DataService {
     });
   }
 
-  private async addBookSqliteOld(book: Book): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      if(!this.dbConnection && this.getPlatform() === 'android'){
-        await this.setUpSQLite();
-      }
-      try {
-        const sqlInsert = `
-          INSERT INTO Books (isbn, title, author, pageCount, publishedDate, imageUrl)
-          VALUES (?, ?, ?, ?, ?, ?);
-        `;
-
-        const query = this.dbConnection?.query(sqlInsert, [book.isbn, book.title, book.author, book.pageCount, book.publishedDate, book.imageUrl])
-
-        if(!query){
-          reject('Query is undefined');
-          return;
-        }
-
-        await query;
-
-        resolve();
-      } catch (error) {
-        console.error('Error adding book:', error);
-        reject(error);
-      }
-    });
-  }
+ 
 
   private async setUpSQLite() {
     try {
@@ -665,14 +788,10 @@ export class DataService {
     });
   }
 
-  private addBookSqlite(book: Book): Promise<void> {
-    alert('addBookSqlite');
+  private addOfflineBookSqlite(book: Book): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-      alert(`this.dbConnection: ${this.dbConnection}`);
-      alert(`this.getPlatform(): ${this.getPlatform()}`);
 
       if(!this.dbConnection && this.getPlatform() === 'android'){
-        alert('setUpSQLite');
         await this.setUpSQLite();
       }
 
@@ -690,14 +809,11 @@ export class DataService {
         */
 
       try {
-        alert('try');
         const sqlInsert = `
-          INSERT INTO Books
+          INSERT INTO OfflineBooks
           (isbn, title, author, pageCount, publishedDate, imageUrl)
           VALUES (?, ?, ?, ?, ?, ?);
         `;
-
-        alert(`sqlInsert: ${sqlInsert}`);
 
         const query = this.dbConnection?.query(sqlInsert, [
           book.isbn,
@@ -707,8 +823,6 @@ export class DataService {
           book.publishedDate,
           book.imageUrl
         ]);
-        
-        alert(`query: ${query}`);
 
         if(!query){
           reject('Query is undefined');
@@ -719,7 +833,57 @@ export class DataService {
 
         resolve();
       } catch (error) {
-        alert(JSON.stringify(error));
+        console.error('Error adding book:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private addBookSqlite(book: Book): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+
+      if(!this.dbConnection && this.getPlatform() === 'android'){
+        await this.setUpSQLite();
+      }
+
+      /*
+
+      CREATE TABLE IF NOT EXISTS Books (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          isbn TEXT NOT NULL,
+          title TEXT NOT NULL,
+          author TEXT NOT NULL,
+          pageCount INTEGER NOT NULL,
+          publishedDate TEXT NOT NULL,
+          imageUrl TEXT NOT NULL
+        );
+        */
+
+      try {
+        const sqlInsert = `
+          INSERT INTO Books
+          (isbn, title, author, pageCount, publishedDate, imageUrl)
+          VALUES (?, ?, ?, ?, ?, ?);
+        `;
+
+        const query = this.dbConnection?.query(sqlInsert, [
+          book.isbn,
+          book.title,
+          book.author,
+          book.pageCount,
+          book.publishedDate,
+          book.imageUrl
+        ]);
+
+        if(!query){
+          reject('Query is undefined');
+          return;
+        }
+
+        await query;
+
+        resolve();
+      } catch (error) {
         console.error('Error adding book:', error);
         reject(error);
       }

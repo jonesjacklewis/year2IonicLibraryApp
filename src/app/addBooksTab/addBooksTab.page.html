@@ -97,8 +97,26 @@
           </ion-button>
         </ion-item>
         <ion-item>
+          <ion-segment [(ngModel)]="searchType">
+            <ion-segment-button value="isbn">
+              <ion-label>ISBN</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="title">
+              <ion-label>Title</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </ion-item>
+
+        <!-- Conditional ISBN Input -->
+        <ion-item *ngIf="searchType === 'isbn'">
           <ion-label position="floating">ISBN</ion-label>
           <ion-input ngDefaultControl type="text" [(ngModel)]="isbn" required (ionInput)="searchBookIsbn()" debounce="500"></ion-input>
+        </ion-item>
+
+        <!-- Conditional Title Input -->
+        <ion-item *ngIf="searchType === 'title'">
+          <ion-label position="floating">Title</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="title" required (ionInput)="searchBookTitle()" debounce="500"></ion-input>
         </ion-item>
         
       </ion-list>

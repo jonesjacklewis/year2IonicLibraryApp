@@ -2,12 +2,11 @@ import { Component } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonSpinner } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SpeechService } from '../services/speech.service';
-import { Geolocation } from '@capacitor/geolocation';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { LocationService } from '../services/location.service';
 
 import { CommonModule } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
+import { Network, ConnectionStatus } from '@capacitor/network';
 
 import * as L from 'leaflet';
 import { Library, LibraryResponse } from '../interfaces/libraryResponse';
@@ -26,6 +25,9 @@ export class MapModeTabPage {
 
   private latitude: number = -1;
   private longitude: number = -1;
+
+  public hasConnection: boolean = true;
+  
   public showSpinner: boolean = false;
 
   constructor(public translateService: TranslateService, public speechService: SpeechService, private http: HttpClient, private locationService: LocationService, private dataService: DataService) { }
@@ -40,12 +42,22 @@ export class MapModeTabPage {
   ]
 
   async ngAfterViewInit() {
-    this.showSpinner = true;
-    await this.getLibrariesByLocation();
-    setTimeout(() => {
-      this.initMap();
-      this.showSpinner = false;
-    }, 500); // Adjust delay as needed
+    const status = await Network.getStatus();
+
+
+
+    if (status.connected) {
+      this.showSpinner = true;
+      await this.getLibrariesByLocation();
+      setTimeout(() => {
+        this.initMap();
+        this.showSpinner = false;
+      }, 500); // Adjust delay as needed
+      return;
+    }else{
+      this.hasConnection = false;
+    }
+
   }
 
   private async getLibrariesByLocationData(): Promise<void> {
@@ -57,7 +69,7 @@ export class MapModeTabPage {
     const target: string = `https://uklibrariesapi.co.uk/latitude/${latitude}/longitude/${longitude}/count/10`;
 
     this.http.get(target).subscribe({
-      next: async(response) => {
+      next: async (response) => {
         // get response json
         const libraryResponse = response as LibraryResponse;
 
@@ -93,7 +105,7 @@ export class MapModeTabPage {
 
     const currentLatitude = result.latitude;
     const currentLongitude = result.longitude;
-    
+
     this.latitude = parseFloat(currentLatitude);
     this.longitude = parseFloat(currentLongitude);
 
@@ -152,7 +164,7 @@ export class MapModeTabPage {
       return;
     }
 
-  
+
     const libraryResponse = JSON.parse(libraryResponseString) as LibraryResponse;
 
     if (!libraryResponse.success) {
