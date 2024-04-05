@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle, IonCardTitle, IonCardContent, IonList, IonGrid, IonRow, IonCol, IonContent, IonButton, IonIcon, IonLabel, IonItem, IonCard, IonCardHeader } from '@ionic/angular/standalone';
+import { IonInput, IonHeader, IonToolbar, IonTitle, IonCardSubtitle, IonCardTitle, IonCardContent, IonList, IonGrid, IonRow, IonCol, IonContent, IonButton, IonIcon, IonLabel, IonItem, IonCard, IonCardHeader } from '@ionic/angular/standalone';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SpeechService } from '../services/speech.service';
 import { addIcons } from 'ionicons';
@@ -20,12 +20,12 @@ import * as moment from 'moment';
   templateUrl: 'addBooksTab.page.html',
   styleUrls: ['addBooksTab.page.scss'],
   standalone: true,
-  imports: [IonHeader, IonCard, IonCardTitle, IonCardContent, IonList, IonGrid, IonRow, IonCol, IonCardHeader, IonToolbar, IonTitle, IonContent, TranslateModule, IonButton, IonIcon, IonLabel, CommonModule, FormsModule, IonItem, ReactiveFormsModule],
+  imports: [IonHeader, IonCard, IonCardTitle, IonCardSubtitle, IonCardContent, IonInput, IonList, IonGrid, IonRow, IonCol, IonCardHeader, IonToolbar, IonTitle, IonContent, TranslateModule, IonButton, IonIcon, IonLabel, CommonModule, FormsModule, IonItem, ReactiveFormsModule],
 })
 export class AddBooksTabPage {
 
+  // Add Book Manually Vars
   public showAddBookManually = false;
-
   public isbn: string = '';
   public title: string = '';
   public author: string = '';
@@ -34,10 +34,14 @@ export class AddBooksTabPage {
   public imageUrl: string = '';
   public formValid: boolean = false;
 
+  // Search Book Vars
+  public showAddBookSearch = false;
+  public books: Book[] = [];
+
   constructor(
     public translateService: TranslateService, public speechService: SpeechService, public bookService: BooksService, private http: HttpClient, private dataService: DataService) { }
 
-  async cancel(){
+  async cancel() {
     this.isbn = '';
     this.title = '';
     this.author = '';
@@ -46,6 +50,7 @@ export class AddBooksTabPage {
     this.imageUrl = '';
     this.formValid = false;
     this.showAddBookManually = false;
+    this.showAddBookSearch = false;
     await this.speechService.speak(this.translateService.instant('CANCELING'));
   }
 
@@ -54,6 +59,7 @@ export class AddBooksTabPage {
     if (await this.speechService.textToSpeechIsEnabled()) {
       this.speechService.speak(this.translateService.instant('ADD_BOOKS_TAB'));
     }
+    await this.dataService.initDB();
   }
 
   async addBookManually() {
@@ -61,7 +67,7 @@ export class AddBooksTabPage {
     this.showAddBookManually = true;
   }
 
-  async addBookManuallyVerify(){
+  async addBookManuallyVerify() {
     this.formValid = true;
     await this.verifyIsbn();
     await this.verifyTitle();
@@ -70,7 +76,7 @@ export class AddBooksTabPage {
     await this.verifyPublishedDate();
     await this.verifyImageUrl();
 
-    if(this.formValid){
+    if (this.formValid) {
       const date = new Date(this.publishedDate);
 
       const book: Book = {
@@ -90,12 +96,13 @@ export class AddBooksTabPage {
       this.imageUrl = '';
       this.showAddBookManually = false;
       this.formValid = false;
-      location.reload();
+      // location.reload();
     }
   }
 
   async addBookSearch() {
     this.speechService.speak(this.translateService.instant('ADD_BOOK_SEARCH'));
+    this.showAddBookSearch = true;
   }
 
   async addBookScan() {
@@ -106,7 +113,7 @@ export class AddBooksTabPage {
     this.showAddBookManually = false;
   }
 
-  async verifyIsbn() {
+  async verifyIsbn(searchBooks: boolean = false) {
     const isbn = this.isbn.replace(/-/g, '').replace(/ /g, '');
 
     if (!await this.bookService.verifyIsbn(isbn)) {
@@ -115,6 +122,8 @@ export class AddBooksTabPage {
       alert(this.translateService.instant('INVALID_ISBN'));
       return;
     }
+
+
   }
 
   async verifyTitle() {
@@ -147,7 +156,7 @@ export class AddBooksTabPage {
 
   async verifyPublishedDate() {
     const date = new Date(this.publishedDate);
-    
+
     // format this.publishedDate as yyyy-MM-dd
 
     const formattedDate = moment(date).format('YYYY-MM-DD');
@@ -190,13 +199,23 @@ export class AddBooksTabPage {
           alert(this.translateService.instant('INVALID_IMAGE_URL'));
         }
       }),
-      catchError(async() => throwError(async() => {
+      catchError(async () => throwError(async () => {
         this.formValid = false;
         await this.speechService.speak(this.translateService.instant('INVALID_IMAGE_URL'));
         alert(this.translateService.instant('INVALID_IMAGE_URL'));
         new Error('URL could not be reached or does not point to an image')
       }))
     );
+  }
+
+  async searchBookIsbn() {
+    this.books = await this.bookService.getBooksByApiByIsbn(this.isbn);
+  }
+
+  async addBookSearchVerify(book: Book) {
+    await this.dataService.addBook(book);
+    this.showAddBookSearch = false;
+    this.books = [];
   }
 
 

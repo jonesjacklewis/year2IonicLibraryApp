@@ -66,7 +66,7 @@
         </ion-item>
         <ion-item>
           <ion-label position="floating">{{ "PUBLISHED_DATE" | translate }}</ion-label> <br>
-          <ion-input ngDefaultControl type="date" displayFormat="yyyy-MM-dd" [(ngModel)]="publishedDate" required (ionChange)="verifyPublishedDate()"></ion-input>
+          <ion-input ngDefaultControl type="date" displayFormat="yyyy-MM-dd" [(ngModel)]="publishedDate" required></ion-input>
         </ion-item>
         <ion-item>
           <ion-label position="floating">{{ "IMAGE_URL" | translate }}</ion-label>
@@ -79,6 +79,53 @@
           </ion-button>
         </ion-item>
       </ion-list>
+
+
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="showAddBookSearch">
+    <ion-card-header>
+      <ion-card-title>{{ "ADD_BOOK_SEARCH" | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item>
+          <ion-button expand="full" (click)="cancel()" color="danger" size="large">
+            <ion-icon slot="end" name="backspace-outline"></ion-icon>
+            {{ "CANCEL" | translate }}
+          </ion-button>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">ISBN</ion-label>
+          <ion-input ngDefaultControl type="text" [(ngModel)]="isbn" required (ionInput)="searchBookIsbn()" debounce="500"></ion-input>
+        </ion-item>
+        
+      </ion-list>
+
+      <ion-grid *ngIf="books.length > 0">
+        <ion-row>
+          <ion-col size="12" size-md="6" size-lg="4" size-xl="3" *ngFor="let book of books">
+            <ion-card>
+              <img [src]="book.imageUrl" alt="Book cover" />
+              <ion-card-header>
+                <ion-card-title>{{ book.title }}</ion-card-title>
+                <ion-card-subtitle>{{ book.author }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <p>ISBN: {{ book.isbn }}</p>
+                <p>Page Count: {{ book.pageCount }}</p>
+                <p>Published Date: {{ book.publishedDate | date:'mediumDate' }}</p>
+                <ion-button (click)="addBookSearchVerify(book)" color="success" size="small">
+                  <ion-icon slot="end" name="add-circle-outline"></ion-icon>
+                  {{ "ADD_BOOK" | translate }}
+                </ion-button>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
     </ion-card-content>
   </ion-card>
 </ion-content>

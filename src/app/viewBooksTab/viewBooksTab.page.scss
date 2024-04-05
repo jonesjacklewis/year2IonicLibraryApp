@@ -1,0 +1,11 @@
+/* Style for images to ensure uniform size */
+.uniform-image {
+    width: 100%; /* Makes image width responsive to the card's width */
+    height: 500px; /* Fixed height for all images */
+    object-fit: cover; /* Ensures images cover the area without distorting aspect ratio */
+  }
+  
+  /* Optional: Define a fixed or minimum height for ion-card to ensure uniform card size */
+  ion-card {
+    min-height: 750px; /* Adjust based on your content */
+  }

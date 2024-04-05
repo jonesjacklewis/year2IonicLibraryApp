@@ -37,6 +37,7 @@ export class DataService {
     if (this.getPlatform() == 'web') {
       return await this.addBookWeb(book);
     }
+    return await this.addBookSqlite(book);
   }
 
   public async setLocalStorage(name: string, value: any): Promise<void> {
@@ -87,7 +88,62 @@ export class DataService {
     if (this.getPlatform() == 'web') {
       return await this.getAllBooksWeb();
     }
-    return [];
+    return await this.getAllBooksSqlite();
+  }
+
+  private async getAllBooksSqlite(): Promise<Book[]> {
+    return new Promise<Book[]>(async (resolve, reject) => {
+      try {
+        if(!this.dbConnection && this.getPlatform() === 'android'){
+          await this.setUpSQLite();
+        }
+        const sqlSelect = "SELECT * FROM Books;";
+        const result = await this.dbConnection?.query(sqlSelect);
+
+        if(!result?.values || !result.values){
+          resolve([]);
+          return;
+        }
+
+        const books: Book[] = result.values.map((book: any) => {
+
+          const isbn = book['isbn'];
+          const title = book['title'];
+          const author = book['author'];
+
+          let pageCount = book['pageCount'];
+          // make sure pageCount is a number
+          if (typeof pageCount === 'string') {
+            pageCount = parseInt(pageCount, 10);
+          }
+
+          let publishedDate = book['publishedDate'];
+          // make sure publishedDate is a Date object
+          if (typeof publishedDate === 'string') {
+            publishedDate = new Date(publishedDate);
+          }
+
+          const imageUrl = book['imageUrl'];
+
+          const bookItem: Book = {
+            isbn,
+            title,
+            author,
+            pageCount,
+            publishedDate,
+            imageUrl
+          };
+          return bookItem;
+      });
+
+        resolve(books);
+      } catch (error) {
+        alert(JSON.stringify(error));
+        console.error('Error getting all books:', error);
+        reject(error);
+      }
+    });
+
   }
 
   private async getAllBooksWeb(): Promise<Book[]> {
@@ -499,16 +555,49 @@ export class DataService {
     });
   }
 
+  private async addBookSqliteOld(book: Book): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if(!this.dbConnection && this.getPlatform() === 'android'){
+        await this.setUpSQLite();
+      }
+      try {
+        const sqlInsert = `
+          INSERT INTO Books (isbn, title, author, pageCount, publishedDate, imageUrl)
+          VALUES (?, ?, ?, ?, ?, ?);
+        `;
+
+        const query = this.dbConnection?.query(sqlInsert, [book.isbn, book.title, book.author, book.pageCount, book.publishedDate, book.imageUrl])
+
+        if(!query){
+          reject('Query is undefined');
+          return;
+        }
+
+        await query;
+
+        resolve();
+      } catch (error) {
+        console.error('Error adding book:', error);
+        reject(error);
+      }
+    });
+  }
+
   private async setUpSQLite() {
     try {
 
-      try{
-        this.dbConnection = await this.sqlite.retrieveConnection(this.dbName, false);
-      }catch{
-        this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
+      if(!this.dbConnection){
+        try{
+          this.dbConnection = await this.sqlite.retrieveConnection(this.dbName, false);
+        }catch{
+          this.dbConnection = await this.sqlite.createConnection(this.dbName, false, 'no-encryption', 1, false);
+        }
       }
       
+      
       await this.dbConnection.open();
+      
+      // await this.dbConnection.open();
 
       // SQL statement to create the Config table if it doesn't exist
       const sqlCreateTable = `
@@ -575,6 +664,68 @@ export class DataService {
       }
     });
   }
+
+  private addBookSqlite(book: Book): Promise<void> {
+    alert('addBookSqlite');
+    return new Promise<void>(async (resolve, reject) => {
+      alert(`this.dbConnection: ${this.dbConnection}`);
+      alert(`this.getPlatform(): ${this.getPlatform()}`);
+
+      if(!this.dbConnection && this.getPlatform() === 'android'){
+        alert('setUpSQLite');
+        await this.setUpSQLite();
+      }
+
+      /*
+
+      CREATE TABLE IF NOT EXISTS Books (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          isbn TEXT NOT NULL,
+          title TEXT NOT NULL,
+          author TEXT NOT NULL,
+          pageCount INTEGER NOT NULL,
+          publishedDate TEXT NOT NULL,
+          imageUrl TEXT NOT NULL
+        );
+        */
+
+      try {
+        alert('try');
+        const sqlInsert = `
+          INSERT INTO Books
+          (isbn, title, author, pageCount, publishedDate, imageUrl)
+          VALUES (?, ?, ?, ?, ?, ?);
+        `;
+
+        alert(`sqlInsert: ${sqlInsert}`);
+
+        const query = this.dbConnection?.query(sqlInsert, [
+          book.isbn,
+          book.title,
+          book.author,
+          book.pageCount,
+          book.publishedDate,
+          book.imageUrl
+        ]);
+        
+        alert(`query: ${query}`);
+
+        if(!query){
+          reject('Query is undefined');
+          return;
+        }
+
+        await query;
+
+        resolve();
+      } catch (error) {
+        alert(JSON.stringify(error));
+        console.error('Error adding book:', error);
+        reject(error);
+      }
+    });
+  }
+
 
   private setConfigSqlite(name: string, dataType: string, value: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {

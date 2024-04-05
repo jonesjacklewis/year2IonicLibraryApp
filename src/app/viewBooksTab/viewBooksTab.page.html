@@ -17,7 +17,7 @@
     <ion-row>
       <ion-col size="12" size-md="6" size-lg="4" size-xl="3" *ngFor="let book of books">
         <ion-card>
-          <img [src]="book.imageUrl" alt="Book cover" />
+          <img [src]="book.imageUrl" alt="Book cover" class="uniform-image"/>
           <ion-card-header>
             <ion-card-title>{{ book.title }}</ion-card-title>
             <ion-card-subtitle>{{ book.author }}</ion-card-subtitle>
